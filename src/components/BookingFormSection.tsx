@@ -158,6 +158,7 @@ export function BookingFormSection() {
                   altfetish.com@gmail.com
                 </a>
               </p>
+              <p>ボタンがグレーアウトして押せない場合は売り切れです。</p>
             </div>
           </div>
 
