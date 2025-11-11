@@ -28,7 +28,10 @@ app.get("/make-server-6fda9f73/health", (c) => {
 app.get("/make-server-6fda9f73/slots/:date", async (c) => {
   try {
     const date = c.req.param("date");
-    const slotIds = ["slot1", "slot2", "slot3"];
+    
+    // 環境変数から時間枠設定を取得、デフォルトは3つのスロット
+    const timeSlotsEnv = Deno.env.get("TIME_SLOTS") || "slot1,slot2,slot3";
+    const slotIds = timeSlotsEnv.split(",").map(id => id.trim());
     
     const slots = await Promise.all(
       slotIds.map(async (slotId) => {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { eventConfig, getTimeSlotMap } from "../config/event";
 
 type TimeSlot = {
   id: string;
@@ -7,26 +8,15 @@ type TimeSlot = {
   available: boolean;
 };
 
-const SLOT_TIMES: Record<string, string> = {
-  slot1: "15:00-15:45",
-  slot2: "16:00-16:45",
-  slot3: "17:00-17:45",
-};
-
-const EVENT_DATE = "2025-12-06";
-
 export function EventInfoSection() {
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([
-    { id: "slot1", time: "15:00-15:45", available: true },
-    { id: "slot2", time: "16:00-16:45", available: true },
-    { id: "slot3", time: "17:00-17:45", available: true },
-  ]);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSlots = useCallback(async () => {
     try {
+      const slotTimeMap = getTimeSlotMap();
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-6fda9f73/slots/${EVENT_DATE}`,
+        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/slots/${eventConfig.eventDate}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -43,7 +33,7 @@ export function EventInfoSection() {
       if (data.success) {
         const slots = data.slots.map((slot: { id: string; available: boolean }) => ({
           id: slot.id,
-          time: SLOT_TIMES[slot.id],
+          time: slotTimeMap[slot.id] || slot.id,
           available: slot.available,
         }));
         setTimeSlots(slots);
@@ -78,7 +68,7 @@ export function EventInfoSection() {
                 <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
                   Date
                 </span>
-                <span className="tracking-[0.1em]">12/6（土）</span>
+                <span className="tracking-[0.1em]">{eventConfig.eventDateDisplay}</span>
               </div>
 
               <div className="space-y-4">
@@ -119,33 +109,33 @@ export function EventInfoSection() {
                 <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
                   Duration
                 </span>
-                <span className="tracking-[0.1em]">45分 / 各枠</span>
+                <span className="tracking-[0.1em]">{eventConfig.duration}</span>
               </div>
               <div className="flex justify-between items-center border-b border-black pb-4">
                 <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
                   料金
                 </span>
-                <span className="tracking-[0.1em]">¥13,000 / 一枠</span>
+                <span className="tracking-[0.1em]">{eventConfig.price}</span>
               </div>
-              <div className="flex justify-between items-center border-b border-black pb-4">
-                <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
-                  Option
-                </span>
-                <span className="tracking-[0.1em] text-sm">
-                  ハーネス、コルセット、マスクなど +¥2,000 / アイテム
-                </span>
-              </div>
+              {eventConfig.option && (
+                <div className="flex justify-between items-center border-b border-black pb-4">
+                  <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
+                    Option
+                  </span>
+                  <span className="tracking-[0.1em] text-sm">{eventConfig.option}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center border-b border-black pb-4">
                 <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
                   Location
                 </span>
-                <span className="tracking-[0.1em]">都内スタジオ</span>
+                <span className="tracking-[0.1em]">{eventConfig.location}</span>
               </div>
               <div className="flex justify-between items-center border-b border-black pb-4">
                 <span className="tracking-[0.15em] text-sm uppercase text-gray-600">
                   Capacity
                 </span>
-                <span className="tracking-[0.1em]">1名 / 各枠</span>
+                <span className="tracking-[0.1em]">{eventConfig.capacity}</span>
               </div>
             </div>
           </div>

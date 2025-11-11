@@ -5,20 +5,13 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { eventConfig, getTimeSlotMap } from "../config/event";
 
 type TimeSlot = {
   id: string;
   time: string;
   available: boolean;
 };
-
-const SLOT_TIMES: Record<string, string> = {
-  slot1: "15:00-15:45",
-  slot2: "16:00-16:45",
-  slot3: "17:00-17:45",
-};
-
-const EVENT_DATE = "2025-12-06";
 
 export function BookingFormSection() {
   const [formData, setFormData] = useState({
@@ -42,8 +35,9 @@ export function BookingFormSection() {
 
   const fetchSlots = async () => {
     try {
+      const slotTimeMap = getTimeSlotMap();
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-6fda9f73/slots/${EVENT_DATE}`,
+        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/slots/${eventConfig.eventDate}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -60,7 +54,7 @@ export function BookingFormSection() {
       if (data.success) {
         const slots = data.slots.map((slot: { id: string; available: boolean }) => ({
           id: slot.id,
-          time: SLOT_TIMES[slot.id],
+          time: slotTimeMap[slot.id] || slot.id,
           available: slot.available,
         }));
         setTimeSlots(slots);
@@ -101,7 +95,7 @@ export function BookingFormSection() {
             sns: formData.sns,
             timeSlot: formData.timeSlot,
             notes: formData.notes,
-            date: EVENT_DATE,
+            date: eventConfig.eventDate,
           }),
         }
       );
@@ -154,8 +148,8 @@ export function BookingFormSection() {
             <div className="text-sm tracking-[0.1em] text-gray-400 space-y-2 pt-4">
               <p>申込みは予約決定ではありません。まず、以下の希望枠を一つ選択してください。下にフォームが出るのでご入力ください。1度送信されると変更はこのサイトではできないため、お手数ですがメールでお問い合わせください。</p>
               <p>
-                <a href="mailto:altfetish.com@gmail.com" className="underline hover:text-white transition-colors">
-                  altfetish.com@gmail.com
+                <a href={`mailto:${eventConfig.contactEmail}`} className="underline hover:text-white transition-colors">
+                  {eventConfig.contactEmail}
                 </a>
               </p>
               <p>ボタンがグレーアウトして押せない場合は売り切れです。</p>

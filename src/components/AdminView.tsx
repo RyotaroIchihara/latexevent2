@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import { eventConfig, getTimeSlotMap } from "../config/event";
 
 type Booking = {
   name: string;
@@ -10,12 +11,6 @@ type Booking = {
   notes: string;
   date: string;
   timestamp: string;
-};
-
-const SLOT_TIMES: Record<string, string> = {
-  slot1: "15:00-15:45",
-  slot2: "16:00-16:45",
-  slot3: "17:00-17:45",
 };
 
 export function AdminView() {
@@ -31,10 +26,9 @@ export function AdminView() {
     try {
       setLoading(true);
       setError(null);
-      const eventDate = "2025-12-06";
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-6fda9f73/bookings/${eventDate}`,
+        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/bookings/${eventConfig.eventDate}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -137,7 +131,7 @@ export function AdminView() {
                         {formatDate(booking.timestamp)}
                       </TableCell>
                       <TableCell className="tracking-[0.1em]">
-                        {SLOT_TIMES[booking.timeSlot] || booking.timeSlot}
+                        {getTimeSlotMap()[booking.timeSlot] || booking.timeSlot}
                       </TableCell>
                       <TableCell className="tracking-[0.1em]">
                         {booking.name}
@@ -160,7 +154,7 @@ export function AdminView() {
 
           <div className="text-center pt-8">
             <p className="text-xs tracking-[0.2em] uppercase text-gray-400">
-              総予約数: {bookings.length} / 3
+              総予約数: {bookings.length} / {eventConfig.timeSlots.length}
             </p>
           </div>
         </div>

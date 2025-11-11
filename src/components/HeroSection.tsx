@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import image_4be8e46c808971bae0e069f070140540bfeb4ceb from 'figma:asset/4be8e46c808971bae0e069f070140540bfeb4ceb.png';
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { eventConfig } from "../config/event";
 
 type TimeSlot = {
   id: string;
   available: boolean;
 };
-
-const EVENT_DATE = "2025-12-06";
 
 export function HeroSection() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -24,7 +23,7 @@ export function HeroSection() {
   const fetchSlots = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-6fda9f73/slots/${EVENT_DATE}`,
+        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/slots/${eventConfig.eventDate}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -78,11 +77,13 @@ export function HeroSection() {
               Private Photo Session
             </p>
             <h1 className="tracking-[0.1em] text-5xl md:text-7xl">
-              Natsu Ameya
+              {eventConfig.modelName}
             </h1>
-            <p className="text-3xl md:text-5xl tracking-[0.2em] mt-8">
-              Latex Beauty.
-            </p>
+            {eventConfig.subtitle && (
+              <p className="text-3xl md:text-5xl tracking-[0.2em] mt-8">
+                {eventConfig.subtitle}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-center mt-16">
