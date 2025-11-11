@@ -151,6 +151,14 @@ export function BookingFormSection() {
             <p className="text-sm tracking-[0.15em] text-gray-400">
               ご希望の枠を選択してお申し込みください
             </p>
+            <div className="text-sm tracking-[0.1em] text-gray-400 space-y-2 pt-4">
+              <p>申込みは予約決定ではありません。まず、以下の希望枠を一つ選択してください。下にフォームが出るのでご入力ください。1度送信されると変更はこのサイトではできないため、お手数ですがメールでお問い合わせください。</p>
+              <p>
+                <a href="mailto:altfetish.com@gmail.com" className="underline hover:text-white transition-colors">
+                  altfetish.com@gmail.com
+                </a>
+              </p>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
