@@ -12,23 +12,26 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
 
+  // 環境変数から管理画面パスワードを取得
+  const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+
   useEffect(() => {
-    // URLパラメータで管理画面を表示（例：?admin=secret_key_2025）
+    // URLパラメータで管理画面を表示
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const adminKey = params.get("admin");
       
-      // セキュリティ：秘密キーで管理画面にアクセス
-      if (adminKey === "natsu_admin_2025") {
+      // セキュリティ：環境変数から取得した秘密キーで管理画面にアクセス
+      if (adminKey && adminPassword && adminKey === adminPassword) {
         setShowAdmin(true);
       }
     }
-  }, []);
+  }, [adminPassword]);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 簡易パスワード認証
-    if (password === "natsu_admin_2025") {
+    // 簡易パスワード認証（環境変数から取得したパスワードを使用）
+    if (adminPassword && password === adminPassword) {
       setIsAuthenticated(true);
       setPasswordError(false);
     } else {
