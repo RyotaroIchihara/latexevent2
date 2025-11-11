@@ -91,7 +91,7 @@ export function HeroSection() {
               disabled={isDisabled}
               className={`px-12 py-4 rounded-none tracking-[0.2em] uppercase text-sm transition-colors ${
                 isDisabled
-                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  ? "bg-black text-white border border-white cursor-not-allowed"
                   : "bg-white text-black hover:bg-gray-200"
               }`}
             >
