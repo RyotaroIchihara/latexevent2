@@ -39,15 +39,13 @@ export function BookingFormSection() {
       setFetchError(null);
       const slotTimeMap = getTimeSlotMap();
       // Supabase FunctionsのURL構造: /functions/v1/{function-name}/{path}
-      // 関数名は "server" で、パスは "make-server-6fda9f73/slots/:date"
-      const functionName = "server";
-      const apiPath = eventConfig.apiPath || "make-server-6fda9f73";
-      const apiUrl = `https://${projectId}.supabase.co/functions/v1/${functionName}/${apiPath}/slots/${eventConfig.eventDate}`;
+      // 関数名は "make-server-6fda9f73" で、パスは "slots/:date"
+      const functionName = eventConfig.apiPath || "make-server-6fda9f73";
+      const apiUrl = `https://${projectId}.supabase.co/functions/v1/${functionName}/slots/${eventConfig.eventDate}`;
       
       console.log("Fetching slots from:", apiUrl);
       console.log("Project ID:", projectId);
       console.log("Function Name:", functionName);
-      console.log("API Path:", apiPath);
       console.log("Event Date:", eventConfig.eventDate);
       
       const response = await fetch(apiUrl, {
@@ -85,9 +83,9 @@ export function BookingFormSection() {
         // ERR_NAME_NOT_RESOLVED エラーの場合
         if (error.message.includes("ERR_NAME_NOT_RESOLVED") || 
             (error as any).cause?.code === "ENOTFOUND") {
-          errorMessage = `DNS解決エラー: Supabase Functionsに接続できません。\n\n考えられる原因:\n1. Supabase Functionsがデプロイされていない\n2. プロジェクトIDが間違っている\n3. ネットワーク接続の問題\n\n確認事項:\n- Supabase DashboardでFunctionsがデプロイされているか確認\n- プロジェクトID: ${projectId}\n- 関数名: server\n- API Path: ${eventConfig.apiPath || "未設定"}`;
+          errorMessage = `DNS解決エラー: Supabase Functionsに接続できません。\n\n考えられる原因:\n1. Supabase Functionsがデプロイされていない\n2. プロジェクトIDが間違っている\n3. ネットワーク接続の問題\n\n確認事項:\n- Supabase DashboardでFunctionsがデプロイされているか確認\n- プロジェクトID: ${projectId}\n- 関数名: ${functionName}\n- API Path: ${eventConfig.apiPath || "未設定"}`;
         } else {
-          errorMessage = `ネットワークエラー: APIに接続できません。\n\nURL: https://${projectId}.supabase.co/functions/v1/server/${eventConfig.apiPath || "make-server-6fda9f73"}/slots/${eventConfig.eventDate}\n\nSupabase Functionsがデプロイされているか確認してください。`;
+          errorMessage = `ネットワークエラー: APIに接続できません。\n\nURL: https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath || "make-server-6fda9f73"}/slots/${eventConfig.eventDate}\n\nSupabase Functionsがデプロイされているか確認してください。`;
         }
       } else if (error instanceof Error) {
         errorMessage = error.message;
@@ -122,9 +120,8 @@ export function BookingFormSection() {
     setSubmitStatus({ type: null, message: "" });
 
     try {
-      const functionName = "server";
-      const apiPath = eventConfig.apiPath || "make-server-6fda9f73";
-      const apiUrl = `https://${projectId}.supabase.co/functions/v1/${functionName}/${apiPath}/bookings`;
+      const functionName = eventConfig.apiPath || "make-server-6fda9f73";
+      const apiUrl = `https://${projectId}.supabase.co/functions/v1/${functionName}/bookings`;
       
       const response = await fetch(apiUrl, {
         method: "POST",

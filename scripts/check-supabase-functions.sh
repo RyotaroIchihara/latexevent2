@@ -10,12 +10,12 @@ PROJECT_ID="qjonbiccqqbmepxitjxs"
 PUBLIC_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqb25iaWNjcXFibWVweGl0anhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyMzc1ODMsImV4cCI6MjA3NzgxMzU4M30.ghl4qUqKI5W7sry5qoBO6H_JAovl_Sm8hXWzkQzcaEE"
 
 # 関数名とAPIパス
-FUNCTION_NAME="server"
+FUNCTION_NAME="make-server-6fda9f73"
 API_PATH="make-server-6fda9f73"
 EVENT_DATE="2026-02-07"
 
 # ベースURL
-BASE_URL="https://${PROJECT_ID}.supabase.co/functions/v1/${FUNCTION_NAME}/${API_PATH}"
+BASE_URL="https://${PROJECT_ID}.supabase.co/functions/v1/${FUNCTION_NAME}"
 
 echo "============================================"
 echo "Supabase Functions 確認スクリプト"
