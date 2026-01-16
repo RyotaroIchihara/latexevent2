@@ -27,8 +27,10 @@ export function AdminView() {
       setLoading(true);
       setError(null);
       
+      const functionName = "server";
+      const apiPath = eventConfig.apiPath || "make-server-6fda9f73";
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/bookings/${eventConfig.eventDate}`,
+        `https://${projectId}.supabase.co/functions/v1/${functionName}/${apiPath}/bookings/${eventConfig.eventDate}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,

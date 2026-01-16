@@ -22,8 +22,10 @@ export function HeroSection() {
 
   const fetchSlots = async () => {
     try {
+      const functionName = "server";
+      const apiPath = eventConfig.apiPath || "make-server-6fda9f73";
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/slots/${eventConfig.eventDate}`,
+        `https://${projectId}.supabase.co/functions/v1/${functionName}/${apiPath}/slots/${eventConfig.eventDate}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,

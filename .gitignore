@@ -17,6 +17,7 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+cloudflare-env-vars.txt
 
 # Logs
 npm-debug.log*

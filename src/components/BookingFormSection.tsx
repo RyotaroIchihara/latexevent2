@@ -24,6 +24,7 @@ export function BookingFormSection() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
     message: string;
@@ -35,21 +36,36 @@ export function BookingFormSection() {
 
   const fetchSlots = async () => {
     try {
+      setFetchError(null);
       const slotTimeMap = getTimeSlotMap();
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/${eventConfig.apiPath}/slots/${eventConfig.eventDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      // Supabase FunctionsのURL構造: /functions/v1/{function-name}/{path}
+      // 関数名は "server" で、パスは "make-server-6fda9f73/slots/:date"
+      const functionName = "server";
+      const apiPath = eventConfig.apiPath || "make-server-6fda9f73";
+      const apiUrl = `https://${projectId}.supabase.co/functions/v1/${functionName}/${apiPath}/slots/${eventConfig.eventDate}`;
+      
+      console.log("Fetching slots from:", apiUrl);
+      console.log("Project ID:", projectId);
+      console.log("Function Name:", functionName);
+      console.log("API Path:", apiPath);
+      console.log("Event Date:", eventConfig.eventDate);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
+
+      console.log("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch slots");
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`APIエラー: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log("Response data:", data);
       
       if (data.success) {
         const slots = data.slots.map((slot: { id: string; available: boolean }) => ({
@@ -58,9 +74,34 @@ export function BookingFormSection() {
           available: slot.available,
         }));
         setTimeSlots(slots);
+      } else {
+        throw new Error(data.error || "時間枠の取得に失敗しました");
       }
     } catch (error) {
       console.error("Error fetching slots:", error);
+      let errorMessage = "時間枠の取得に失敗しました";
+      
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        // ERR_NAME_NOT_RESOLVED エラーの場合
+        if (error.message.includes("ERR_NAME_NOT_RESOLVED") || 
+            (error as any).cause?.code === "ENOTFOUND") {
+          errorMessage = `DNS解決エラー: Supabase Functionsに接続できません。\n\n考えられる原因:\n1. Supabase Functionsがデプロイされていない\n2. プロジェクトIDが間違っている\n3. ネットワーク接続の問題\n\n確認事項:\n- Supabase DashboardでFunctionsがデプロイされているか確認\n- プロジェクトID: ${projectId}\n- 関数名: server\n- API Path: ${eventConfig.apiPath || "未設定"}`;
+        } else {
+          errorMessage = `ネットワークエラー: APIに接続できません。\n\nURL: https://${projectId}.supabase.co/functions/v1/server/${eventConfig.apiPath || "make-server-6fda9f73"}/slots/${eventConfig.eventDate}\n\nSupabase Functionsがデプロイされているか確認してください。`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      setFetchError(errorMessage);
+      // エラーが発生した場合でも、デフォルトの時間枠を表示
+      const slotTimeMap = getTimeSlotMap();
+      const defaultSlots = eventConfig.timeSlots.map((slot) => ({
+        id: slot.id,
+        time: slot.time,
+        available: false, // エラー時は利用不可として表示
+      }));
+      setTimeSlots(defaultSlots);
     } finally {
       setLoading(false);
     }
@@ -81,24 +122,25 @@ export function BookingFormSection() {
     setSubmitStatus({ type: null, message: "" });
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-6fda9f73/bookings`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            sns: formData.sns,
-            timeSlot: formData.timeSlot,
-            notes: formData.notes,
-            date: eventConfig.eventDate,
-          }),
-        }
-      );
+      const functionName = "server";
+      const apiPath = eventConfig.apiPath || "make-server-6fda9f73";
+      const apiUrl = `https://${projectId}.supabase.co/functions/v1/${functionName}/${apiPath}/bookings`;
+      
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          sns: formData.sns,
+          timeSlot: formData.timeSlot,
+          notes: formData.notes,
+          date: eventConfig.eventDate,
+        }),
+      });
 
       const data = await response.json();
 
@@ -163,6 +205,54 @@ export function BookingFormSection() {
               </Label>
               {loading ? (
                 <p className="text-center text-gray-400 py-4">読み込み中...</p>
+              ) : fetchError ? (
+                <div className="space-y-4">
+                  <div className="text-center text-red-400 py-4 text-sm space-y-2">
+                    <p className="font-semibold">エラーが発生しました</p>
+                    <p className="whitespace-pre-line">{fetchError}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      ブラウザのコンソール（F12）で詳細を確認してください
+                    </p>
+                  </div>
+                  {timeSlots.length > 0 && (
+                    <RadioGroup
+                      value={formData.timeSlot}
+                      onValueChange={(value) => setFormData({ ...formData, timeSlot: value })}
+                      className="flex flex-col md:flex-row gap-4"
+                      required
+                    >
+                      {timeSlots.map((slot) => (
+                        <div
+                          key={slot.id}
+                          className={`flex items-center space-x-3 px-6 py-4 rounded-none flex-1 ${
+                            slot.available
+                              ? "border border-white"
+                              : "border border-gray-600 opacity-40"
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value={slot.id}
+                            id={slot.id}
+                            disabled={!slot.available}
+                            className={slot.available ? "border-white" : "border-gray-600"}
+                          />
+                          <Label
+                            htmlFor={slot.id}
+                            className={`tracking-[0.1em] flex-1 ${
+                              slot.available ? "cursor-pointer" : "cursor-not-allowed"
+                            }`}
+                          >
+                            {slot.time}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                </div>
+              ) : timeSlots.length === 0 ? (
+                <p className="text-center text-gray-400 py-4">
+                  時間枠が見つかりませんでした
+                </p>
               ) : (
                 <RadioGroup
                   value={formData.timeSlot}
