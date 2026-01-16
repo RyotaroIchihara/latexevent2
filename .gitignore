@@ -19,6 +19,11 @@ dist/
 .env.production.local
 cloudflare-env-vars.txt
 
+# Documentation with sensitive information
+docs/WORK_LOG_*.md
+docs/DELETE_BOOKING_DATA.md
+docs/TESTING_GUIDE.md
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
