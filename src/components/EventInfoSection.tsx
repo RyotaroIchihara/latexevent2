@@ -93,7 +93,11 @@ export function EventInfoSection() {
                         `}
                       >
                         <div className="space-y-2">
-                          <p>{slot.time}</p>
+                          <p>
+                            {slot.time.includes("-") 
+                              ? slot.time.split("-")[0] 
+                              : slot.time}
+                          </p>
                           <p className="text-xs tracking-[0.2em] uppercase">
                             {slot.available ? "Available" : "SOLD OUT"}
                           </p>
