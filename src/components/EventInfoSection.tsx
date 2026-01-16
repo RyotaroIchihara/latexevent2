@@ -32,11 +32,24 @@ export function EventInfoSection() {
       const data = await response.json();
       
       if (data.success) {
-        const slots = data.slots.map((slot: { id: string; available: boolean }) => ({
-          id: slot.id,
-          time: slotTimeMap[slot.id] || slot.id,
-          available: slot.available,
-        }));
+        const slots = data.slots.map((slot: { id: string; available: boolean }) => {
+          const timeString = slotTimeMap[slot.id] || slot.id;
+          // 時間文字列を「15:00」形式に変換
+          // 「15:00-15:45」の場合は「15:00」を抽出
+          // 「15」の場合は「15:00」に変換
+          let displayTime = timeString;
+          if (timeString.includes("-")) {
+            displayTime = timeString.split("-")[0];
+          } else if (/^\d+$/.test(timeString)) {
+            // 数字だけの場合は「:00」を追加
+            displayTime = `${timeString}:00`;
+          }
+          return {
+            id: slot.id,
+            time: displayTime,
+            available: slot.available,
+          };
+        });
         setTimeSlots(slots);
       }
     } catch (error) {
@@ -93,11 +106,7 @@ export function EventInfoSection() {
                         `}
                       >
                         <div className="space-y-2">
-                          <p>
-                            {slot.time.includes("-") 
-                              ? slot.time.split("-")[0] 
-                              : slot.time}
-                          </p>
+                          <p>{slot.time}</p>
                           <p className="text-xs tracking-[0.2em] uppercase">
                             {slot.available ? "Available" : "SOLD OUT"}
                           </p>
