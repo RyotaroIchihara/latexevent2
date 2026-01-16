@@ -17,6 +17,7 @@ export function AdminView() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBookings();
@@ -65,6 +66,45 @@ export function AdminView() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleDelete = async (booking: Booking) => {
+    if (!confirm(`以下の予約を削除しますか？\n\n名前: ${booking.name}\nメール: ${booking.email}\n時間枠: ${getTimeSlotMap()[booking.timeSlot] || booking.timeSlot}\n\nこの操作は取り消せません。`)) {
+      return;
+    }
+
+    try {
+      setDeleting(`${booking.date}:${booking.timeSlot}`);
+      const functionName = eventConfig.apiPath || "make-server-6fda9f73";
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/${functionName}/bookings/${booking.date}/${booking.timeSlot}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete booking");
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // 予約一覧を再取得
+        await fetchBookings();
+      } else {
+        throw new Error(data.error || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      alert(error instanceof Error ? error.message : "予約の削除に失敗しました");
+    } finally {
+      setDeleting(null);
+    }
   };
 
   return (
@@ -123,31 +163,47 @@ export function AdminView() {
                     <TableHead className="text-white tracking-[0.15em] uppercase text-xs">
                       備考
                     </TableHead>
+                    <TableHead className="text-white tracking-[0.15em] uppercase text-xs">
+                      操作
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bookings.map((booking, index) => (
-                    <TableRow key={index} className="border-white hover:bg-white/5">
-                      <TableCell className="tracking-[0.1em] text-sm">
-                        {formatDate(booking.timestamp)}
-                      </TableCell>
-                      <TableCell className="tracking-[0.1em]">
-                        {getTimeSlotMap()[booking.timeSlot] || booking.timeSlot}
-                      </TableCell>
-                      <TableCell className="tracking-[0.1em]">
-                        {booking.name}
-                      </TableCell>
-                      <TableCell className="tracking-[0.1em] text-sm">
-                        {booking.email}
-                      </TableCell>
-                      <TableCell className="tracking-[0.1em] text-sm text-gray-400">
-                        {booking.sns || "-"}
-                      </TableCell>
-                      <TableCell className="tracking-[0.1em] text-sm text-gray-400 max-w-xs truncate">
-                        {booking.notes || "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {bookings.map((booking, index) => {
+                    const deleteKey = `${booking.date}:${booking.timeSlot}`;
+                    const isDeleting = deleting === deleteKey;
+                    return (
+                      <TableRow key={index} className="border-white hover:bg-white/5">
+                        <TableCell className="tracking-[0.1em] text-sm">
+                          {formatDate(booking.timestamp)}
+                        </TableCell>
+                        <TableCell className="tracking-[0.1em]">
+                          {getTimeSlotMap()[booking.timeSlot] || booking.timeSlot}
+                        </TableCell>
+                        <TableCell className="tracking-[0.1em]">
+                          {booking.name}
+                        </TableCell>
+                        <TableCell className="tracking-[0.1em] text-sm">
+                          {booking.email}
+                        </TableCell>
+                        <TableCell className="tracking-[0.1em] text-sm text-gray-400">
+                          {booking.sns || "-"}
+                        </TableCell>
+                        <TableCell className="tracking-[0.1em] text-sm text-gray-400 max-w-xs truncate">
+                          {booking.notes || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <button
+                            onClick={() => handleDelete(booking)}
+                            disabled={isDeleting}
+                            className="bg-red-600 text-white px-4 py-1 rounded-none tracking-[0.1em] text-xs uppercase hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isDeleting ? "削除中..." : "削除"}
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
