@@ -45,8 +45,8 @@ const getEnvOr = (key: string, defaultValue: string): string => {
 const defaultConfig: EventConfig = {
   modelName: "Natsu Ameya",
   subtitle: "Latex Beauty.",
-  eventDate: "2025-12-06",
-  eventDateDisplay: "12/6（土）",
+  eventDate: "2026-04-04",
+  eventDateDisplay: "4/4（土）",
   timeSlots: [
     { id: "slot1", time: "15:00-15:45" },
     { id: "slot2", time: "16:00-16:45" },
